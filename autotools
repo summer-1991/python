@@ -1,0 +1,627 @@
+# -*- coding: utf8 -*-
+import urllib
+import urllib2  
+import json
+import datetime
+import time
+import wx
+import sys
+import threading
+import xlwt
+import os
+import random
+
+exitFlag = 0
+exitflag = 0
+outflag=0
+stopflag=0
+intoadd=''
+readadd=''
+checklist=['Android','IOS','PC','ANPS']
+loginnum=0
+doingnum=0
+randomflag=0
+randomlist=[]
+
+#新建一个excel文件  
+filename=xlwt.Workbook(encoding='utf-8',style_compression=0)  
+#新建一个sheet  
+sheet1=filename.add_sheet('time',cell_overwrite_ok=True)
+
+#新建一个excel文件  
+fn=xlwt.Workbook(encoding='utf-8',style_compression=0)  
+#新建一个sheet  
+sheet2=fn.add_sheet('queue',cell_overwrite_ok=True)
+ 
+class bucky(wx.Frame):
+    def __init__(self, parent, id):
+        wx.Frame.__init__(self, parent, id, u'测试接口', size = (650, 600))
+        
+        #创建面板
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.s1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.s2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.s3 = wx.BoxSizer(wx.HORIZONTAL)
+        self.s4 = wx.BoxSizer(wx.HORIZONTAL)
+        self.s5 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer6 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer7 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer8 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer9 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer10 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer11= wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer12 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer13 = wx.BoxSizer(wx.HORIZONTAL)
+        
+        #添加标题
+        font = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.BOLD)
+        self.lab1=wx.StaticText(self.panel, label =u'推送消息时间数据:')        
+        self.lab1.SetFont(font)
+        self.lab2=wx.StaticText(self.panel, label =u'队列数据:')
+        self.lab2.SetFont(font)
+        self.lab3=wx.StaticText(self.panel, label =u'模拟登录:')
+        self.lab3.SetFont(font)
+        self.lab4=wx.StaticText(self.panel, label =u'模拟登出:')
+        self.lab4.SetFont(font)
+        self.lab5=wx.StaticText(self.panel, label =u'*会在此程序同一路径下生成文件！间隔单位可以为小数，单位都是‘s’。')
+        self.lab5.SetForegroundColour('red')
+
+
+        self.l1=wx.StaticText(self.panel, label =u'文件:')
+        self.t1=wx.TextCtrl(self.panel,value='')
+
+        self.l2=wx.StaticText(self.panel, label =u'接口URL:')
+        self.t2=wx.TextCtrl(self.panel,value='')
+
+        self.l3=wx.StaticText(self.panel, label =u'间隔时间:')
+        self.t3=wx.TextCtrl(self.panel,value='1')
+
+        self.l4=wx.StaticText(self.panel, label =u'次数:')
+        self.t4=wx.TextCtrl(self.panel,value='0')
+
+        self.l5=wx.StaticText(self.panel, label =u'接口URL:')
+        self.t5=wx.TextCtrl(self.panel,value='')
+
+        self.l6=wx.StaticText(self.panel, label =u'间隔时间:')
+        self.t6=wx.TextCtrl(self.panel,value='1')
+
+        self.l7=wx.StaticText(self.panel, label =u'用户id区间:')
+        self.t7=wx.TextCtrl(self.panel,value='')
+        self.label=wx.StaticText(self.panel, label =u'到')
+        self.text=wx.TextCtrl(self.panel,value='')
+
+        self.label1=wx.StaticText(self.panel, label =u'随机量:')
+        self.text1=wx.TextCtrl(self.panel,value='0')
+
+        self.l8=wx.StaticText(self.panel, label =u'次数:')
+        self.t8=wx.TextCtrl(self.panel,value='0')
+
+        self.l9=wx.StaticText(self.panel, label =u'sessionId文件:')
+        self.t9=wx.TextCtrl(self.panel,value='')
+         
+        self.l10=wx.StaticText(self.panel, label =u'接口URL:')
+        self.t10=wx.TextCtrl(self.panel,value='')
+
+        self.l11=wx.StaticText(self.panel, label =u'间隔时间:')
+        self.t11=wx.TextCtrl(self.panel,value='1')
+
+        self.l12=wx.StaticText(self.panel, label =u'登出用户量:')
+        self.t12=wx.TextCtrl(self.panel,value='1')
+
+        self.l13=wx.StaticText(self.panel, label =u'次数:')
+        self.t13=wx.TextCtrl(self.panel,value='0')
+
+        self.b1= wx.Button(self.panel, label = u'选择...')
+        self.b2= wx.Button(self.panel, label = u'开始')
+        self.b3= wx.Button(self.panel, label = u'确定')
+        self.b4= wx.Button(self.panel, label = u'停止')
+        self.b5= wx.Button(self.panel, label = u'登录')
+        self.b6= wx.Button(self.panel, label = u'取消')
+        self.b7= wx.Button(self.panel, label = u'登出')
+        self.b8= wx.Button(self.panel, label = u'取消')
+        self.b9= wx.Button(self.panel, label = u'选择sessionId文件')
+
+        self.check1 = wx.CheckBox(self.panel,-1,u'随机')
+
+        self.s1.Add(self.lab1,flag=wx.RIGHT,border=10)
+        self.sizer.Add(self.s1,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,20))
+
+        self.sizer1.Add(self.l1,flag=wx.RIGHT,border=10)
+        self.sizer1.Add(self.t1,proportion=1)
+        self.sizer1.Add(self.b1,proportion=0)
+        self.sizer.Add(self.sizer1,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer2.Add(self.b2,proportion=0)
+        self.sizer.Add(self.sizer2,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+        
+        self.s2.Add(self.lab2,flag=wx.RIGHT,border=10)
+        self.sizer.Add(self.s2,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,20))
+
+        self.sizer3.Add(self.l2,flag=wx.RIGHT,border=10)
+        self.sizer3.Add(self.t2,proportion=1)
+        self.sizer.Add(self.sizer3,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer4.Add(self.l3,flag=wx.RIGHT,border=5)
+        self.sizer4.Add(self.t3,proportion=0)
+        self.sizer4.Add(self.l4,flag=wx.RIGHT,border=5)
+        self.sizer4.Add(self.t4,proportion=0)
+        self.sizer.Add(self.sizer4,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer5.Add(self.b3,proportion=0)
+        self.sizer5.Add(self.b4,proportion=0)
+        self.sizer.Add(self.sizer5,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.s3.Add(self.lab3,flag=wx.RIGHT,border=10)
+        self.sizer.Add(self.s3,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,20))
+
+        self.sizer6.Add(self.l5,flag=wx.RIGHT,border=10)
+        self.sizer6.Add(self.t5,proportion=1)
+        self.sizer.Add(self.sizer6,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer7.Add(self.l7,flag=wx.RIGHT,border=5)
+        self.sizer7.Add(self.t7,proportion=0)
+        self.sizer7.Add(self.label,flag=wx.RIGHT,border=5)
+        self.sizer7.Add(self.text,proportion=0)
+        self.sizer7.Add(self.label1,flag=wx.RIGHT,border=5)
+        self.sizer7.Add(self.text1,proportion=0)
+        self.sizer7.Add(self.check1,proportion=0)
+        self.sizer.Add(self.sizer7,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer13.Add(self.l6,flag=wx.RIGHT,border=5)
+        self.sizer13.Add(self.t6,proportion=0)
+        self.sizer13.Add(self.l8,flag=wx.RIGHT,border=5)
+        self.sizer13.Add(self.t8,proportion=0)
+        self.sizer.Add(self.sizer13,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer8.Add(self.b5,proportion=0)
+        self.sizer8.Add(self.b6,proportion=0)
+        self.sizer.Add(self.sizer8,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.s4.Add(self.lab4,flag=wx.RIGHT,border=10)
+        self.sizer.Add(self.s4,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,20))
+
+        self.sizer9.Add(self.l9,flag=wx.RIGHT,border=10)
+        self.sizer9.Add(self.t9,proportion=1)
+        self.sizer9.Add(self.b9,proportion=0)
+        self.sizer.Add(self.sizer9,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer10.Add(self.l10,flag=wx.RIGHT,border=10)
+        self.sizer10.Add(self.t10,proportion=1)
+        self.sizer.Add(self.sizer10,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer11.Add(self.l11,flag=wx.RIGHT,border=5)
+        self.sizer11.Add(self.t11,proportion=0)
+        self.sizer11.Add(self.l12,flag=wx.RIGHT,border=5)
+        self.sizer11.Add(self.t12,proportion=0)
+        self.sizer11.Add(self.l13,flag=wx.RIGHT,border=5)
+        self.sizer11.Add(self.t13,proportion=0)
+        self.sizer.Add(self.sizer11,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.sizer12.Add(self.b7,proportion=0)
+        self.sizer12.Add(self.b8,proportion=0)
+        self.sizer.Add(self.sizer12,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+
+        self.sizer.Add((-1,10))
+
+        self.s5.Add(self.lab5,flag=wx.RIGHT,border=10)
+        self.sizer.Add(self.s5,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=20)
+        
+        self.panel.SetSizer(self.sizer) 
+        
+        #绑定单击事件
+        self.Bind(wx.EVT_BUTTON, self.filecheck, self.b1)
+        self.Bind(wx.EVT_BUTTON, self.intoexcel, self.b2)
+        self.Bind(wx.EVT_BUTTON, self.do, self.b3)
+        self.Bind(wx.EVT_BUTTON, self.stop, self.b4)
+        self.Bind(wx.EVT_BUTTON, self.dologin, self.b5)
+        self.Bind(wx.EVT_BUTTON, self.stoplogin, self.b6)        
+        self.Bind(wx.EVT_BUTTON, self.dologout, self.b7)
+        self.Bind(wx.EVT_BUTTON, self.stoplogout, self.b8)
+        self.Bind(wx.EVT_BUTTON, self.filecheck, self.b9)
+        self.Bind(wx.EVT_CHECKBOX, self.onChecked)
+        
+    def do(self, event):
+        global exitFlag,fn,sheet2
+        url=self.t2.GetValue()
+        t=self.t3.GetValue()
+        
+        if os.path.exists('queue.xls')==False:
+              #新建一个excel文件  
+              fn=xlwt.Workbook(encoding='utf-8',style_compression=0)  
+              #新建一个sheet  
+              sheet2=fn.add_sheet('queue',cell_overwrite_ok=True)
+                
+        exitFlag = 0
+        # 创建新线程
+        thread1 = myThread1(url, t)
+        thread1.start()
+                                               
+    def stop(self, event):
+        global  exitFlag
+        exitFlag = 1
+
+    def dologin(self, event):
+        global exitflag,randomlist
+        url=self.t5.GetValue()
+        t=self.t6.GetValue()
+        startid=self.t7.GetValue()
+        endid=self.text.GetValue()
+        randomnum=self.text1.GetValue()
+        if  randomnum=='':
+            randomnum=0
+
+        if os.path.exists('thefile.txt')==True:
+            os.remove('thefile.txt')
+        
+        exitflag = 0
+        randomlist=[]
+        # 创建新线程
+        randomdata=range(int(startid),int(endid))
+        randomlist=random.sample(randomdata,int(randomnum))
+        thread2 = myThread2(url, t,startid,endid,randomlist,randomnum)
+        thread2.start()
+                                               
+    def stoplogin(self, event):
+        global  exitflag
+        exitflag = 1
+
+    def dologout(self, event):
+        global outflag
+        readadd=self.t9.GetValue()
+        url=self.t10.GetValue()
+        t=self.t11.GetValue()
+        count=self.t12.GetValue()
+                                          
+        outflag = 0
+        # 创建新线程
+        thread3 = myThread3(readadd,url, t,count)
+        thread3.start()
+                                               
+    def stoplogout(self, event):
+        global  outflag
+        outflag = 1
+        
+    def filecheck(self, event):
+        global intoadd,readadd
+        dlg = wx.FileDialog(self,u"选择文件夹",style=wx.DD_DEFAULT_STYLE)  
+        if dlg.ShowModal() == wx.ID_OK:  
+              #文件夹路径
+            if event.GetEventObject().GetLabel()==u'选择...':
+                 intoadd=dlg.GetPath()
+                 self.t1.SetValue(intoadd)
+            if event.GetEventObject().GetLabel()==u'选择sessionId文件':
+                 readadd=dlg.GetPath()
+                 self.t9.SetValue(readadd)
+              
+        dlg.Destroy()
+
+    def onChecked(self, event):
+        global randomflag
+        if self.check1.IsChecked():
+            randomflag=1
+            print(randomflag)
+        else:
+            randomflag=0
+            print(randomflag)
+        
+
+    def intoexcel(self, event):        
+        global stopflag,filename,sheet1
+        intoadd=self.t1.GetValue()
+                                          
+        stopflag = 0
+
+        if os.path.exists('time.xls')==False: 
+            filename=xlwt.Workbook(encoding='utf-8',style_compression=0)    
+            sheet1=filename.add_sheet('time',cell_overwrite_ok=True)
+
+        # 创建新线程
+        thread4 = myThread4(intoadd)
+        thread4.start()
+ 
+class myThread1(threading.Thread):   #队列数据
+    def __init__(self, url, t):
+        threading.Thread.__init__(self)
+        self.url = url
+        self.t = t
+            
+    def run(self):                    
+        global doingnum
+        num=0
+        doingnum=0
+        while (num >= 0):
+          global exitFlag
+          if exitFlag:
+              break
+          print(num)
+          print(doingnum)
+          dointoexcel(self.url,num)
+          frame.t4.SetValue(str(doingnum))
+          time.sleep(float(self.t))
+          num=num+1
+
+class myThread2(threading.Thread):   #模拟登录
+    def __init__(self, url, t,startid,endid,randomlist,randomnum):
+        threading.Thread.__init__(self)
+        self.url = url
+        self.t = t
+        self.startid=startid
+        self.endid=endid
+        self.randomlist=randomlist
+        self.randomnum=randomnum
+            
+    def run(self):                   #把要执行的代码写到run函数里面 线程在创建后会直接运行run函数         
+        global loginnum,randomflag
+        if randomflag==0:
+           num=int(self.startid)
+           endnum=int(self.endid)
+        else:
+           num=0
+           endnum=int(self.randomnum)
+
+        loginnum=0
+        while (num < endnum):
+            global exitflag
+            if exitflag:
+                break
+
+            if randomflag==0:
+                writeid(self.url ,num)
+
+            else:                    
+                writeid(self.url ,self.randomlist[num])
+            
+            frame.t8.SetValue(str(loginnum))
+            time.sleep(float(self.t))
+            num=num+1
+
+class myThread3(threading.Thread):   #模拟登出
+    def __init__(self, readadd,url, t,count):
+        threading.Thread.__init__(self)
+        self.readadd = readadd
+        self.url = url
+        self.t = t
+        self.count=count
+            
+    def run(self):                   #把要执行的代码写到run函数里面 线程在创建后会直接运行run函数         
+        num=0
+        for num in range(int(self.count)):
+          global exitflag
+          if outflag:
+              break
+        
+          logout(self.readadd,self.url ,num)
+          frame.t13.SetValue(str(num+1))
+          time.sleep(float(self.t))
+
+class myThread4(threading.Thread):   #推送消息时间数据
+    def __init__(self, intoadd):
+        threading.Thread.__init__(self)
+        self.intoadd = intoadd
+            
+    def run(self):                   #把要执行的代码写到run函数里面 线程在创建后会直接运行run函数         
+          num=0        
+          while (num >= 0):
+             global stopflag
+             if stopflag:
+                break
+          
+             intoexcel(self.intoadd)
+             
+             num=num+1
+          
+def intoexcel(intoadd):
+     global filename,sheet1,checklist,stopflag
+     intoadd=intoadd.replace('\\','/')
+     print(intoadd)
+
+     fopen=open(intoadd,'r')  
+     lines=fopen.readlines()
+
+     flag=0
+     i=0
+     for line in lines:
+        if i==0:
+            i=i+1
+            continue
+        
+        data=line.split(',')
+        fdata=data[0].split(':',1)
+
+        if flag==0:
+           sheet1.write(1,0,'userID')
+           sheet1.write(1,1,u'用户验证时间')
+
+        f1=fdata[1].strip()
+        f2=data[1].strip()
+        diff=timediff(f1,f2)
+        sheet1.write(i+1,0,fdata[0])
+        sheet1.write(i+1,1,diff)
+
+        k=0
+        for j in range(4):
+            col=3*j+2
+            mer=3*k+2
+            if data[col]=='':
+                continue
+
+            if flag==0:
+                sheet1.write_merge(0,0,mer,mer+2,checklist[j]) 
+                sheet1.write(1,mer,u'本地等待时间')
+                sheet1.write(1,mer+1,u'推送处理时间')
+                sheet1.write(1,mer+2,u'推送时间')
+
+            t1=data[col].strip()
+            t2=data[col+1].strip()
+            t3=data[col+2].strip()
+            diff=timediff(t1,t2)
+            sheet1.write(i+1,mer,diff)
+            
+            diff=timediff(t2,t3)
+            sheet1.write(i+1,mer+1,diff)
+
+            diff=timediff(t1,t3)
+            sheet1.write(i+1,mer+2,diff)
+
+            k=k+1
+
+        last=data[14].replace('\n','').strip()
+        diff=timediff(f1,last)
+        sheet1.write(i+1,3*k+2,diff)
+        if flag==0:
+           sheet1.write(1,3*k+2,u'流程时间')
+
+        flag=1
+        i=i+1
+        print(line)
+        
+     fopen.close()
+     filename.save('time.xls')
+     time.sleep(3)
+     stopflag=1
+     dial = wx.MessageDialog(None,u'亲!导入完成','',wx.OK)  
+     dial.ShowModal()
+
+def  timediff(t1,t2):
+     if t1=='':
+         time1=0
+     else:
+         d1=datetime.datetime.strptime(t1,"%Y-%m-%d %H:%M:%S.%f")
+         time1=int(time.mktime(d1.timetuple())*1000)+d1.microsecond/1000
+     if t2=='':
+         time2=0
+     else:
+         d2=datetime.datetime.strptime(t2,"%Y-%m-%d %H:%M:%S.%f")
+         time2=int(time.mktime(d2.timetuple())*1000)+d2.microsecond/1000
+
+     if (time2 - time1)<0:
+         diff=-1
+     else:
+         diff=time2-time1
+
+     if time2==0 and time1 ==0:
+         diff=-2
+
+     return diff
+
+
+def dointoexcel(url,num):
+    global fn,sheet2,exitFlag,doingnum
+    try:              
+        response = urllib2.urlopen(url)  
+        #获取结果
+        now=datetime.datetime.now()
+        sheet2.write(num+1,0,now.strftime("%Y-%m-%d %H:%M:%S.%f"))
+        
+        value = response.read()
+        #解析从网络上获取的JSON数据
+        val = json.loads(value)
+
+        if len(val['data']) !=0 and len(val['data']['list']) !=0:
+            lists=val['data']['list']
+        
+            i=0
+            for item in lists:           
+                sheet2.write(0,i+1,item['queueName'])
+                sheet2.write(num+1,i+1,item['size'])
+                i=i+1
+                
+            doingnum=doingnum+1
+            fn.save('queue.xls')
+                       
+    except Exception,e:
+        exitFlag=1
+        print e 
+    
+
+def writeid(url,num):
+    global exitflag,loginnum
+    try:   
+        userid='991002627-0-'+str(num)
+        data = urllib.urlencode({ 'username': userid})
+        print(url+'?platform=1&%s' % data)
+        response = urllib2.urlopen(url+'?platform=1&%s' % data)  
+
+        #获取结果
+        value = response.read()
+        #解析从网络上获取的JSON数据
+        val = json.loads(value)
+
+        print(val)
+
+        if len(val['data']) !=0:
+            loginnum=loginnum+1
+            fobj=open('thefile.txt','a')  
+            fobj.write(userid+':'+val['data']['sessionId']+'\n')  
+            fobj.close()
+                               
+    except Exception,e:
+        exitflag=1
+        print e 
+
+def logout(readadd,url,num):
+    global outflag
+    readadd=readadd.replace('\\','/')
+    try:   
+        f=open(readadd,'r')  
+        lines=f.readlines()
+        session=lines[num].split(':')
+        print(url+'?sessionId=%s' % session[1])
+
+        response = urllib2.urlopen(url+'?sessionId=%s' % session[1])
+        #获取结果
+        value = response.read()
+        #解析从网络上获取的JSON数据
+        val = json.loads(value)
+        print(val)
+        
+        f.close()
+                        
+    except Exception,e:
+        outflag=1
+        print e
+        
+if __name__ == '__main__':  
+    #app = wx.App()
+    app = wx.PySimpleApp()
+    frame = bucky(parent = None,id=-1)
+    frame.Show()
+    app.MainLoop()
